@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <h1>📊 Live Metrics</h1>
+            <div class="controls">
+                <button onclick="manualRefresh()" class="refresh-btn">🔄 Refresh</button>
+                <div class="last-update">Last update: <span id="lastUpdate">--:--:--</span></div>
+            </div>
+        </header>
+
+        <!-- YouTube Section -->
+        <section class="platform youtube">
+            <div class="platform-header">
+                <span class="icon">▶️</span>
+                <h2>YouTube</h2>
+                <span class="status live" id="ytStatus">● LIVE</span>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Subscribers</div>
+                    <div class="metric-value" id="ytSubs">--</div>
+                    <div class="metric-change" id="ytSubsChange">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Views</div>
+                    <div class="metric-value" id="ytViews">--</div>
+                    <div class="metric-change" id="ytViewsChange">--</div>
+                </div>
+            </div>
+
+            <div class="videos-section">
+                <div class="video-card top">
+                    <div class="video-badge">🔥 TOP PERFORMING</div>
+                    <div class="video-thumb" id="ytTopThumb"></div>
+                    <div class="video-info">
+                        <h3 id="ytTopTitle">--</h3>
+                        <div class="video-stats">
+                            <span id="ytTopViews">-- views</span>
+                            <span id="ytTopTime">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-card latest">
+                    <div class="video-badge">🆕 LATEST</div>
+                    <div class="video-thumb" id="ytLatestThumb"></div>
+                    <div class="video-info">
+                        <h3 id="ytLatestTitle">--</h3>
+                        <div class="video-stats">
+                            <span id="ytLatestViews">-- views</span>
+                            <span id="ytLatestTime">--</span>
+                        </div>
+                        <div class="velocity" id="ytLatestVelocity">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TikTok Section -->
+        <section class="platform tiktok">
+            <div class="platform-header">
+                <span class="icon">🎵</span>
+                <h2>TikTok</h2>
+                <span class="status live" id="ttStatus">● LIVE</span>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Followers</div>
+                    <div class="metric-value" id="ttFollowers">--</div>
+                    <div class="metric-change" id="ttFollowersChange">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Likes</div>
+                    <div class="metric-value" id="ttLikes">--</div>
+                    <div class="metric-change" id="ttLikesChange">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Following</div>
+                    <div class="metric-value" id="ttFollowing">--</div>
+                </div>
+            </div>
+
+            <div class="videos-section">
+                <div class="video-card top">
+                    <div class="video-badge">🔥 TOP VIDEO</div>
+                    <div class="video-thumb" id="ttTopThumb"></div>
+                    <div class="video-info">
+                        <h3 id="ttTopTitle">--</h3>
+                        <div class="video-stats">
+                            <span id="ttTopViews">-- views</span>
+                            <span id="ttTopLikes">-- likes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-card latest">
+                    <div class="video-badge">🆕 LATEST</div>
+                    <div class="video-thumb" id="ttLatestThumb"></div>
+                    <div class="video-info">
+                        <h3 id="ttLatestTitle">--</h3>
+                        <div class="video-stats">
+                            <span id="ttLatestViews">-- views</span>
+                            <span id="ttLatestLikes">-- likes</span>
+                        </div>
+                        <div class="velocity" id="ttLatestVelocity">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings" id="settings">
+        <h3>⚙️ Configuration</h3>
+        
+        <div class="config-section">
+            <h4>YouTube</h4>
+            <input type="text" id="ytChannelId" placeholder="Channel ID (UC...)">
+            <input type="text" id="ytApiKey" placeholder="YouTube Data API Key">
+        </div>
+
+        <div class="config-section">
+            <h4>TikTok</h4>
+            <input type="text" id="ttAccessToken" placeholder="TikTok Access Token">
+            <input type="text" id="ttOpenId" placeholder="TikTok Open ID">
+            <p class="help">Get tokens from your <a href="https://developers.tiktok.com/" target="_blank">TikTok Developer Portal</a></p>
+        </div>
+
+        <button onclick="saveConfig()">Save & Load Dashboard</button>
+        <button onclick="toggleSettings()" class="secondary">Cancel</button>
+    </div>
+
+    <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+
+    <script src="app.js"></script>
+</body>
+</html>

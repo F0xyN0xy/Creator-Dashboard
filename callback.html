@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authorization Complete</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+            background: #1a1a2e;
+            color: white;
+        }
+        .container { text-align: center; }
+        .success { color: #00d084; font-size: 48px; }
+        .token { 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success">✓</div>
+        <h1>Authorization Successful</h1>
+        <p>Copy your access token below and paste it in the dashboard settings:</p>
+        <div class="token" id="token">Processing...</div>
+        <p><small>You can close this window after copying.</small></p>
+    </div>
+    <script>
+        // Extract token from URL hash
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const token = params.get('access_token');
+        
+        if (token) {
+            document.getElementById('token').textContent = token;
+            // Auto-copy to clipboard
+            navigator.clipboard.writeText(token);
+        } else {
+            document.getElementById('token').textContent = 'No token found in URL';
+        }
+    </script>
+</body>
+</html>
