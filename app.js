@@ -11,7 +11,7 @@ let config = {
 };
 
 // TikTok OAuth Config - REPLACE THESE WITH YOUR VALUES
-const TIKTOK_CLIENT_KEY = 'YOUR_CLIENT_KEY_HERE'; // From TikTok Developer Portal
+const TIKTOK_CLIENT_KEY = 'awhrf3ewt4e1zur1'; // From TikTok Developer Portal
 const REDIRECT_URI = 'https://creator-dashboards.netlify.app/callback'; // Your Netlify URL
 
 // State tracking
