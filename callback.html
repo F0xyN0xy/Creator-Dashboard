@@ -3,239 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authorization Complete - Creator Dashboard</title>
+    <title>Connecting to TikTok...</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
-        .container { 
-            text-align: center; 
-            max-width: 600px;
-            animation: fadeIn 0.5s ease;
+        .loading {
+            text-align: center;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .success { 
-            width: 80px;
-            height: 80px;
-            background: #00d084;
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(254, 44, 85, 0.3);
+            border-top-color: #fe2c55;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 30px;
-            font-size: 40px;
-            animation: scaleIn 0.3s ease;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
-        
-        @keyframes scaleIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        
-        h1 { 
-            font-size: 2rem; 
-            margin-bottom: 15px;
-            background: linear-gradient(90deg, #fff, #a0a0a0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        p { 
-            color: #888; 
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .token-box { 
-            background: rgba(0,0,0,0.3); 
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 25px; 
-            border-radius: 15px; 
-            margin: 20px 0;
-            position: relative;
-        }
-        
-        .token-label {
-            font-size: 0.8rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-        
-        .token { 
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: #fe2c55;
-            word-break: break-all;
-            line-height: 1.5;
-            user-select: all;
-        }
-        
-        .copy-btn {
-            background: #fe2c55;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        
-        .copy-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(254, 44, 85, 0.3);
-        }
-        
-        .copy-btn.copied {
-            background: #00d084;
-        }
-        
-        .steps {
-            text-align: left;
-            background: rgba(255,255,255,0.05);
-            padding: 25px;
-            border-radius: 15px;
-            margin-top: 30px;
-        }
-        
-        .steps h3 {
-            margin-bottom: 15px;
-            color: #fff;
-        }
-        
-        .steps ol {
-            padding-left: 20px;
-            color: #aaa;
-        }
-        
-        .steps li {
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        
-        .error {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            padding: 20px;
-            border-radius: 10px;
-            color: #ff6b6b;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="success" id="statusIcon">✓</div>
-        <h1 id="statusTitle">Authorization Successful</h1>
-        <p id="statusText">Copy your access token below and paste it in your dashboard settings.</p>
-        
-        <div class="token-box" id="tokenBox" style="display: none;">
-            <div class="token-label">Your Access Token</div>
-            <div class="token" id="token">Processing...</div>
-            <button class="copy-btn" id="copyBtn" onclick="copyToken()">Copy Token</button>
-        </div>
-
-        <div class="steps" id="stepsBox" style="display: none;">
-            <h3>Next Steps:</h3>
-            <ol>
-                <li>Click "Copy Token" above</li>
-                <li>Go back to your dashboard</li>
-                <li>Click the ⚙️ settings button</li>
-                <li>Paste the token in "TikTok Access Token" field</li>
-                <li>Enter your TikTok Open ID</li>
-                <li>Click "Save & Load Dashboard"</li>
-            </ol>
-        </div>
-        <div class="manual-instructions" style="margin-top: 30px; padding: 20px; background: rgba(254,44,85,0.1); border-radius: 10px;">
-            <h3>Manual Token Method (No Backend Required)</h3>
-            <ol style="text-align: left; color: #aaa; line-height: 2;">
-                <li>Go to <a href="https://developers.tiktok.com/" target="_blank">TikTok Developer Portal</a></li>
-                <li>Navigate to your app → API Explorer</li>
-                <li>Select scopes: <code>user.info.basic</code> and <code>video.list</code></li>
-                <li>Click "Generate User Access Token"</li>
-                <li>Copy the token and paste it in your dashboard settings</li>
-            </ol>
-            <button onclick="window.location.href='/'" style="margin-top: 20px; padding: 12px 30px; background: #fe2c55; color: white; border: none; border-radius: 25px; cursor: pointer;">
-                Go to Dashboard Settings
-            </button>
-        </div>
-        <div class="error" id="errorBox" style="display: none;">
-            <strong>Error:</strong> <span id="errorText"></span>
-        </div>
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Connecting to TikTok...</p>
     </div>
-
-    <script>
-        // Parse URL parameters (TikTok sends token in hash fragment)
-        const hash = window.location.hash.substring(1);
-        const hashParams = new URLSearchParams(hash);
-        
-        // Also check query params (some OAuth flows use these)
-        const queryParams = new URLSearchParams(window.location.search);
-        
-        let accessToken = hashParams.get('access_token') || queryParams.get('access_token');
-        let error = queryParams.get('error') || hashParams.get('error');
-        let errorDescription = queryParams.get('error_description') || hashParams.get('error_description');
-
-        function showToken(token) {
-            document.getElementById('tokenBox').style.display = 'block';
-            document.getElementById('stepsBox').style.display = 'block';
-            document.getElementById('token').textContent = token;
-            
-            // Auto-copy after short delay
-            setTimeout(() => {
-                copyToken();
-            }, 500);
-        }
-
-        function showError(message) {
-            document.getElementById('statusIcon').textContent = '✕';
-            document.getElementById('statusIcon').style.background = '#ff6b6b';
-            document.getElementById('statusTitle').textContent = 'Authorization Failed';
-            document.getElementById('statusText').textContent = 'Something went wrong during authorization.';
-            document.getElementById('errorBox').style.display = 'block';
-            document.getElementById('errorText').textContent = message;
-        }
-
-        function copyToken() {
-            const token = document.getElementById('token').textContent;
-            navigator.clipboard.writeText(token).then(() => {
-                const btn = document.getElementById('copyBtn');
-                btn.textContent = 'Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.textContent = 'Copy Token';
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        // Handle different scenarios
-        if (error) {
-            showError(errorDescription || error);
-        } else if (accessToken) {
-            showToken(accessToken);
-        } else {
-            showError('No access token found in URL. Please try authorizing again.');
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

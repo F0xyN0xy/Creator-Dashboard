@@ -1,7 +1,11 @@
 [build]
-  functions = "/functions"
+  functions = "netlify/functions"
+
+[build.environment]
+  TIKTOK_CLIENT_KEY = "${awhrf3ewt4e1zur1}"
+  TIKTOK_CLIENT_SECRET = "${QWWgY8XV3ipdcYTdNV7rNHln99SEPQYJ}"
 
 [[redirects]]
   from = "/api/*"
-  to = "/functions/:splat"
-  status = 200
+  to = "/.netlify/functions/:splat"
+  status: 200
