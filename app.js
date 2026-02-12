@@ -312,7 +312,7 @@ function timeAgo(timestamp) {
 }
 
 function connectTikTok() {
-    const clientKey = 'YOUR_TIKTOK_CLIENT_KEY'; // From your TikTok app
+    const clientKey = 'awhrf3ewt4e1zur1'; // From your TikTok app
     const redirectUri = encodeURIComponent('https://your-site.netlify.app/callback.html');
     const scope = 'user.info.basic,video.list';
     
