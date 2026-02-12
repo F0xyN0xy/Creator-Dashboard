@@ -310,3 +310,18 @@ function timeAgo(timestamp) {
     
     return 'Just now';
 }
+
+function connectTikTok() {
+    const clientKey = 'YOUR_TIKTOK_CLIENT_KEY'; // From your TikTok app
+    const redirectUri = encodeURIComponent('https://your-site.netlify.app/callback.html');
+    const scope = 'user.info.basic,video.list';
+    
+    const authUrl = `https://www.tiktok.com/auth/authorize?client_key=${clientKey}&redirect_uri=${redirectUri}&scope=${scope}&response_type=token`;
+    
+    window.location.href = authUrl;
+}
+
+// Show connect button if no token saved
+if (!config.tiktok.accessToken) {
+    document.getElementById('ttConnectSection').style.display = 'block';
+}

@@ -330,3 +330,25 @@ h1 {
 .metrics-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
+
+.connect-section {
+    text-align: center;
+    padding: 30px;
+}
+
+.connect-btn {
+    background: #fe2c55;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.connect-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(254, 44, 85, 0.4);
+}
