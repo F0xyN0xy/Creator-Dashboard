@@ -313,7 +313,7 @@ function timeAgo(timestamp) {
 
 function connectTikTok() {
     const clientKey = 'awhrf3ewt4e1zur1'; // From your TikTok app
-    const redirectUri = encodeURIComponent('https://your-site.netlify.app/callback.html');
+    const redirectUri = encodeURIComponent('https://creator-dashboards.netlify.app/callback.html');
     const scope = 'user.info.basic,video.list';
     
     const authUrl = `https://www.tiktok.com/auth/authorize?client_key=${clientKey}&redirect_uri=${redirectUri}&scope=${scope}&response_type=token`;
