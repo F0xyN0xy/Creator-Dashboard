@@ -10,24 +10,38 @@ let config = {
     }
 };
 
+// TikTok OAuth Config - REPLACE THESE WITH YOUR VALUES
+const TIKTOK_CLIENT_KEY = 'YOUR_CLIENT_KEY_HERE'; // From TikTok Developer Portal
+const REDIRECT_URI = 'https://creator-dashboards.netlify.app/callback'; // Your Netlify URL
+
 // State tracking
 const previousStats = {
     youtube: { subs: 0, views: 0 },
     tiktok: { followers: 0, likes: 0 }
 };
 
-// Initialize
+// Initialize - WAIT FOR DOM
 document.addEventListener('DOMContentLoaded', () => {
-    loadSavedConfig();
+    console.log('Dashboard initializing...');
     
+    loadSavedConfig();
+    setupConnectButtons();
+    
+    // Check if we're on callback page
+    if (window.location.pathname.includes('callback')) {
+        handleTikTokCallback();
+        return;
+    }
+    
+    // Load dashboard if we have credentials
     const hasYouTube = config.youtube.apiKey && config.youtube.channelId;
     const hasTikTok = config.tiktok.accessToken && config.tiktok.openId;
     
     if (hasYouTube || hasTikTok) {
         loadDashboard();
-        setInterval(loadDashboard, 60000); // Auto-refresh every 60s
+        setInterval(loadDashboard, 60000);
     } else {
-        toggleSettings();
+        console.log('No credentials found, showing setup');
     }
 });
 
@@ -36,6 +50,121 @@ function loadSavedConfig() {
     document.getElementById('ytChannelId').value = config.youtube.channelId;
     document.getElementById('ttAccessToken').value = config.tiktok.accessToken;
     document.getElementById('ttOpenId').value = config.tiktok.openId;
+}
+
+function setupConnectButtons() {
+    // YouTube Connect (manual entry)
+    const ytSection = document.querySelector('.platform.youtube');
+    if (!config.youtube.apiKey || !config.youtube.channelId) {
+        ytSection.insertAdjacentHTML('beforeend', `
+            <div class="connect-prompt" style="text-align: center; padding: 30px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+                <p style="color: #888; margin-bottom: 15px;">YouTube not connected</p>
+                <button onclick="toggleSettings()" style="background: #ff0000; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: 600;">Connect YouTube</button>
+            </div>
+        `);
+    }
+    
+    // TikTok Connect
+    const ttSection = document.querySelector('.platform.tiktok');
+    const hasTikTok = config.tiktok.accessToken && config.tiktok.openId;
+    
+    console.log('TikTok config:', { hasTikTok, token: config.tiktok.accessToken?.substring(0,10), openId: config.tiktok.openId });
+    
+    if (!hasTikTok) {
+        // Hide metrics, show connect button
+        const metricsGrid = ttSection.querySelector('.metrics-grid');
+        const videosSection = ttSection.querySelector('.videos-section');
+        
+        if (metricsGrid) metricsGrid.style.display = 'none';
+        if (videosSection) videosSection.style.display = 'none';
+        
+        ttSection.insertAdjacentHTML('beforeend', `
+            <div class="connect-prompt" style="text-align: center; padding: 40px 20px;">
+                <p style="color: #888; margin-bottom: 20px; font-size: 1.1rem;">Connect your TikTok account to see live metrics</p>
+                <button onclick="connectTikTok()" style="background: #fe2c55; color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 1.1rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3);">
+                    Connect TikTok
+                </button>
+                <p style="color: #666; margin-top: 15px; font-size: 0.9rem;">Or <a href="#" onclick="toggleSettings(); return false;" style="color: #fe2c55;">enter token manually</a></p>
+            </div>
+        `);
+    }
+}
+
+function connectTikTok() {
+    if (TIKTOK_CLIENT_KEY === 'YOUR_CLIENT_KEY_HERE') {
+        alert('Please set your TikTok Client Key in the code first!\n\n1. Go to app.js\n2. Find TIKTOK_CLIENT_KEY\n3. Replace with your actual Client Key from TikTok Developer Portal');
+        return;
+    }
+    
+    // Generate state for security
+    const state = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('tiktokState', state);
+    
+    // Build TikTok OAuth URL (v2)
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
+        `?client_key=${TIKTOK_CLIENT_KEY}` +
+        `&scope=${encodeURIComponent('user.info.basic,video.list')}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+        `&state=${state}`;
+    
+    console.log('Redirecting to TikTok:', authUrl);
+    window.location.href = authUrl;
+}
+
+function handleTikTokCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
+    const errorDesc = urlParams.get('error_description');
+    
+    if (error) {
+        document.body.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a2e; color: white; font-family: sans-serif; text-align: center; padding: 20px;">
+                <div>
+                    <h1 style="color: #ff6b6b; margin-bottom: 20px;">Authorization Failed</h1>
+                    <p>${errorDesc || error}</p>
+                    <button onclick="window.location.href='/'" style="margin-top: 30px; padding: 12px 30px; background: #fe2c55; color: white; border: none; border-radius: 25px; cursor: pointer;">Back to Dashboard</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    if (code) {
+        // Show code for manual copy (since we don't have backend yet)
+        document.body.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; font-family: sans-serif; text-align: center; padding: 20px;">
+                <div style="max-width: 600px; width: 100%;">
+                    <div style="width: 80px; height: 80px; background: #00d084; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; font-size: 40px;">✓</div>
+                    <h1 style="margin-bottom: 20px;">Authorization Code Received</h1>
+                    <p style="color: #888; margin-bottom: 30px;">Copy this code and exchange it for an access token in the TikTok Developer Portal, or paste it below if you have a backend set up.</p>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin-bottom: 30px; word-break: break-all; font-family: monospace; font-size: 0.9rem; color: #fe2c55;">
+                        ${code}
+                    </div>
+                    
+                    <button onclick="navigator.clipboard.writeText('${code}'); this.textContent='Copied!';" style="background: #fe2c55; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: 600; margin-right: 10px;">Copy Code</button>
+                    <button onclick="window.location.href='/'" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px 30px; border-radius: 25px; cursor: pointer;">Go to Dashboard</button>
+                    
+                    <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; text-align: left;">
+                        <h3 style="margin-bottom: 15px; color: #fff;">Next Steps:</h3>
+                        <ol style="color: #aaa; padding-left: 20px; line-height: 2;">
+                            <li>Copy the code above</li>
+                            <li>Go to <a href="https://developers.tiktok.com/" target="_blank" style="color: #fe2c55;">TikTok Developer Portal</a></li>
+                            <li>Open your app → API Explorer</li>
+                            <li>Use "Get access token" with the authorization code</li>
+                            <li>Copy the access_token from the response</li>
+                            <li>Paste it in your dashboard settings</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Store code temporarily
+        localStorage.setItem('tiktokPendingCode', code);
+    }
 }
 
 function toggleSettings() {
@@ -63,22 +192,31 @@ function saveConfig() {
     };
     
     toggleSettings();
-    loadDashboard();
+    
+    // Reload page to show/hide connect buttons properly
+    window.location.reload();
 }
 
 async function loadDashboard() {
     const promises = [];
     
     if (config.youtube.apiKey && config.youtube.channelId) {
-        promises.push(loadYouTube().catch(e => console.error('YouTube error:', e)));
+        promises.push(loadYouTube().catch(e => {
+            console.error('YouTube error:', e);
+            document.getElementById('ytStatus').textContent = '● ERROR';
+            document.getElementById('ytStatus').style.color = '#ff6b6b';
+        }));
     }
     
     if (config.tiktok.accessToken && config.tiktok.openId) {
-        promises.push(loadTikTok().catch(e => console.error('TikTok error:', e)));
+        promises.push(loadTikTok().catch(e => {
+            console.error('TikTok error:', e);
+            document.getElementById('ttStatus').textContent = '● ERROR';
+            document.getElementById('ttStatus').style.color = '#ff6b6b';
+        }));
     }
     
     await Promise.all(promises);
-    
     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 }
 
@@ -91,7 +229,6 @@ function manualRefresh() {
 
 // YouTube Functions
 async function loadYouTube() {
-    // Channel stats
     const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${config.youtube.channelId}&key=${config.youtube.apiKey}`;
     const channelRes = await fetch(channelUrl);
     const channelData = await channelRes.json();
@@ -100,14 +237,12 @@ async function loadYouTube() {
     
     const stats = channelData.items[0].statistics;
     
-    // Update metrics
     updateMetric('ytSubs', parseInt(stats.subscriberCount), previousStats.youtube.subs, 'ytSubsChange');
     updateMetric('ytViews', parseInt(stats.viewCount), previousStats.youtube.views, 'ytViewsChange');
     
     previousStats.youtube.subs = parseInt(stats.subscriberCount);
     previousStats.youtube.views = parseInt(stats.viewCount);
     
-    // Load videos
     await loadYouTubeVideos();
     
     document.getElementById('ytStatus').textContent = '● LIVE';
@@ -115,14 +250,12 @@ async function loadYouTube() {
 }
 
 async function loadYouTubeVideos() {
-    // Get uploads playlist
     const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${config.youtube.channelId}&key=${config.youtube.apiKey}`;
     const channelRes = await fetch(channelUrl);
     const channelData = await channelRes.json();
     
     const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
     
-    // Get recent videos
     const videosUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=10&key=${config.youtube.apiKey}`;
     const videosRes = await fetch(videosUrl);
     const videosData = await videosRes.json();
@@ -138,15 +271,9 @@ async function loadYouTubeVideos() {
         publishedAt: v.snippet.publishedAt
     }));
     
-    // Top video by views
     const topVideo = videos.reduce((max, v) => v.viewCount > max.viewCount ? v : max);
+    const latestVideo = videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))[0];
     
-    // Latest video
-    const latestVideo = videos.sort((a, b) => 
-        new Date(b.publishedAt) - new Date(a.publishedAt)
-    )[0];
-    
-    // Render
     renderYouTubeVideo(topVideo, 'ytTop');
     renderYouTubeVideo(latestVideo, 'ytLatest', true);
 }
@@ -161,8 +288,7 @@ function renderYouTubeVideo(video, prefix, calculateVelocity = false) {
     if (calculateVelocity) {
         const hours = (Date.now() - new Date(video.publishedAt)) / (1000 * 60 * 60);
         const velocity = Math.round(video.viewCount / hours);
-        document.getElementById(`${prefix}Velocity`).textContent = 
-            `⚡ ${formatNumber(velocity)} views/hour`;
+        document.getElementById(`${prefix}Velocity`).textContent = `⚡ ${formatNumber(velocity)} views/hour`;
     }
 }
 
@@ -185,7 +311,6 @@ async function loadTikTok() {
     
     const user = userData.data.user;
     
-    // Update metrics
     updateMetric('ttFollowers', user.follower_count, previousStats.tiktok.followers, 'ttFollowersChange');
     updateMetric('ttLikes', user.likes_count, previousStats.tiktok.likes, 'ttLikesChange');
     document.getElementById('ttFollowing').textContent = formatNumber(user.following_count);
@@ -193,7 +318,6 @@ async function loadTikTok() {
     previousStats.tiktok.followers = user.follower_count;
     previousStats.tiktok.likes = user.likes_count;
     
-    // Load videos
     await loadTikTokVideos(headers);
     
     document.getElementById('ttStatus').textContent = '● LIVE';
@@ -203,7 +327,6 @@ async function loadTikTok() {
 async function loadTikTokVideos(headers) {
     const baseUrl = 'https://open.tiktokapis.com/v2';
     
-    // Get user videos
     const videosUrl = `${baseUrl}/video/list/?fields=id,title,video_description,duration,create_time,like_count,comment_count,share_count,view_count,cover_image_url`;
     const videosRes = await fetch(videosUrl, { 
         headers,
@@ -220,29 +343,23 @@ async function loadTikTokVideos(headers) {
     
     const videos = videosData.data.videos;
     
-    // Top video by views
     const topVideo = videos.reduce((max, v) => (v.view_count || 0) > (max.view_count || 0) ? v : max);
-    
-    // Latest video
     const latestVideo = videos.sort((a, b) => b.create_time - a.create_time)[0];
     
-    // Render
     renderTikTokVideo(topVideo, 'ttTop');
     renderTikTokVideo(latestVideo, 'ttLatest', true);
 }
 
 function renderTikTokVideo(video, prefix, calculateVelocity = false) {
     document.getElementById(`${prefix}Thumb`).style.backgroundImage = `url(${video.cover_image_url})`;
-    document.getElementById(`${prefix}Title`).textContent = 
-        video.title || video.video_description || 'Untitled';
+    document.getElementById(`${prefix}Title`).textContent = video.title || video.video_description || 'Untitled';
     document.getElementById(`${prefix}Views`).textContent = formatNumber(video.view_count || 0) + ' views';
     document.getElementById(`${prefix}Likes`).textContent = formatNumber(video.like_count || 0) + ' likes';
     
     if (calculateVelocity && video.view_count) {
         const hours = (Date.now() - (video.create_time * 1000)) / (1000 * 60 * 60);
         const velocity = Math.round(video.view_count / hours);
-        document.getElementById(`${prefix}Velocity`).textContent = 
-            `⚡ ${formatNumber(velocity)} views/hour`;
+        document.getElementById(`${prefix}Velocity`).textContent = `⚡ ${formatNumber(velocity)} views/hour`;
     }
 }
 
@@ -251,8 +368,7 @@ function updateMetric(elementId, value, previous, changeElementId) {
     const element = document.getElementById(elementId);
     const formatted = formatNumber(value);
     
-    // Animate if changed
-    if (element.textContent !== '--' && element.textContent !== formatted) {
+    if (element.textContent !== '--' && element.textContent !== formatted && element.textContent !== 'Loading...') {
         element.style.transform = 'scale(1.1)';
         element.style.color = '#00d084';
         setTimeout(() => {
@@ -263,7 +379,6 @@ function updateMetric(elementId, value, previous, changeElementId) {
     
     element.textContent = formatted;
     
-    // Show change
     if (changeElementId && previous > 0) {
         const change = value - previous;
         const changeEl = document.getElementById(changeElementId);
@@ -309,111 +424,4 @@ function timeAgo(timestamp) {
     }
     
     return 'Just now';
-}
-
-// TikTok OAuth Configuration
-const TIKTOK_CONFIG = {
-    clientKey: 'awhrf3ewt4e1zur1', // From TikTok Developer Portal
-    redirectUri: encodeURIComponent('https://creator-dashboards.netlify.app/callback.html')
-};
-
-function connectTikTok() {
-    // Generate random state for CSRF protection
-    const state = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    localStorage.setItem('tiktokState', state);
-    
-    // Build authorization URL (v2 endpoint)
-    const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
-        `?client_key=${TIKTOK_CONFIG.clientKey}` +
-        `&scope=user.info.basic,video.list` +
-        `&response_type=code` +
-        `&redirect_uri=${TIKTOK_CONFIG.redirectUri}` +
-        `&state=${state}`;
-    
-    // Redirect to TikTok
-    window.location.href = authUrl;
-}
-
-// Handle callback (run this on page load to check for auth code)
-function handleTikTokCallback() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
-    const errorDesc = urlParams.get('error_description');
-    
-    // Check for errors
-    if (error) {
-        alert(`TikTok auth error: ${errorDesc || error}`);
-        return;
-    }
-    
-    // Verify state matches (CSRF protection)
-    const savedState = localStorage.getItem('tiktokState');
-    if (state && state !== savedState) {
-        alert('Security error: State mismatch. Please try again.');
-        return;
-    }
-    
-    // If we have a code, exchange it for access token
-    if (code) {
-        exchangeCodeForToken(decodeURIComponent(code));
-    }
-}
-
-// Exchange authorization code for access token
-// NOTE: This requires a backend server or Netlify Function (see below)
-async function exchangeCodeForToken(code) {
-    // WARNING: You CANNOT do this from frontend-only due to CORS and client_secret security
-    // You need a backend proxy or Netlify Function
-    
-    alert('Authorization code received: ' + code.substring(0, 20) + '...\n\n' +
-          'Due to TikTok security requirements, you need to exchange this code for a token using a backend server or Netlify Function.\n\n' +
-          'For now, please manually get your token from the TikTok Developer Portal API Explorer and paste it in settings.');
-    
-    // Store the code temporarily
-    localStorage.setItem('tiktokAuthCode', code);
-}
-
-// Run callback handler on load
-document.addEventListener('DOMContentLoaded', () => {
-    // ... your existing init code ...
-    
-    // Check if we're on callback page
-    if (window.location.pathname.includes('callback')) {
-        handleTikTokCallback();
-    }
-});
-
-// Show connect button if no token saved
-if (!config.tiktok.accessToken) {
-    document.getElementById('ttConnectSection').style.display = 'block';
-}
-async function exchangeCodeForToken(code) {
-    const redirectUri = decodeURIComponent(TIKTOK_CONFIG.redirectUri);
-    
-    try {
-        const response = await fetch('/api/tiktok-token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, redirectUri })
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('ttAccessToken', data.access_token);
-        localStorage.setItem('ttOpenId', data.open_id);
-        
-        // Redirect back to main dashboard
-        window.location.href = '/';
-        
-    } catch (error) {
-        alert('Failed to get access token: ' + error.message);
-        console.error(error);
-    }
 }
