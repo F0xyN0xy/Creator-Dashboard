@@ -165,7 +165,19 @@
                 <li>Click "Save & Load Dashboard"</li>
             </ol>
         </div>
-
+        <div class="manual-instructions" style="margin-top: 30px; padding: 20px; background: rgba(254,44,85,0.1); border-radius: 10px;">
+            <h3>Manual Token Method (No Backend Required)</h3>
+            <ol style="text-align: left; color: #aaa; line-height: 2;">
+                <li>Go to <a href="https://developers.tiktok.com/" target="_blank">TikTok Developer Portal</a></li>
+                <li>Navigate to your app → API Explorer</li>
+                <li>Select scopes: <code>user.info.basic</code> and <code>video.list</code></li>
+                <li>Click "Generate User Access Token"</li>
+                <li>Copy the token and paste it in your dashboard settings</li>
+            </ol>
+            <button onclick="window.location.href='/'" style="margin-top: 20px; padding: 12px 30px; background: #fe2c55; color: white; border: none; border-radius: 25px; cursor: pointer;">
+                Go to Dashboard Settings
+            </button>
+        </div>
         <div class="error" id="errorBox" style="display: none;">
             <strong>Error:</strong> <span id="errorText"></span>
         </div>

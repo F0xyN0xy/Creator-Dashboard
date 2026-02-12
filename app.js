@@ -311,17 +311,109 @@ function timeAgo(timestamp) {
     return 'Just now';
 }
 
+// TikTok OAuth Configuration
+const TIKTOK_CONFIG = {
+    clientKey: 'awhrf3ewt4e1zur1', // From TikTok Developer Portal
+    redirectUri: encodeURIComponent('https://creator-dashboards.netlify.app/callback.html')
+};
+
 function connectTikTok() {
-    const clientKey = 'awhrf3ewt4e1zur1'; // From your TikTok app
-    const redirectUri = encodeURIComponent('https://creator-dashboards.netlify.app/callback.html');
-    const scope = 'user.info.basic,video.list';
+    // Generate random state for CSRF protection
+    const state = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('tiktokState', state);
     
-    const authUrl = `https://www.tiktok.com/auth/authorize?client_key=${clientKey}&redirect_uri=${redirectUri}&scope=${scope}&response_type=token`;
+    // Build authorization URL (v2 endpoint)
+    const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
+        `?client_key=${TIKTOK_CONFIG.clientKey}` +
+        `&scope=user.info.basic,video.list` +
+        `&response_type=code` +
+        `&redirect_uri=${TIKTOK_CONFIG.redirectUri}` +
+        `&state=${state}`;
     
+    // Redirect to TikTok
     window.location.href = authUrl;
 }
+
+// Handle callback (run this on page load to check for auth code)
+function handleTikTokCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    const errorDesc = urlParams.get('error_description');
+    
+    // Check for errors
+    if (error) {
+        alert(`TikTok auth error: ${errorDesc || error}`);
+        return;
+    }
+    
+    // Verify state matches (CSRF protection)
+    const savedState = localStorage.getItem('tiktokState');
+    if (state && state !== savedState) {
+        alert('Security error: State mismatch. Please try again.');
+        return;
+    }
+    
+    // If we have a code, exchange it for access token
+    if (code) {
+        exchangeCodeForToken(decodeURIComponent(code));
+    }
+}
+
+// Exchange authorization code for access token
+// NOTE: This requires a backend server or Netlify Function (see below)
+async function exchangeCodeForToken(code) {
+    // WARNING: You CANNOT do this from frontend-only due to CORS and client_secret security
+    // You need a backend proxy or Netlify Function
+    
+    alert('Authorization code received: ' + code.substring(0, 20) + '...\n\n' +
+          'Due to TikTok security requirements, you need to exchange this code for a token using a backend server or Netlify Function.\n\n' +
+          'For now, please manually get your token from the TikTok Developer Portal API Explorer and paste it in settings.');
+    
+    // Store the code temporarily
+    localStorage.setItem('tiktokAuthCode', code);
+}
+
+// Run callback handler on load
+document.addEventListener('DOMContentLoaded', () => {
+    // ... your existing init code ...
+    
+    // Check if we're on callback page
+    if (window.location.pathname.includes('callback')) {
+        handleTikTokCallback();
+    }
+});
 
 // Show connect button if no token saved
 if (!config.tiktok.accessToken) {
     document.getElementById('ttConnectSection').style.display = 'block';
+}
+async function exchangeCodeForToken(code) {
+    const redirectUri = decodeURIComponent(TIKTOK_CONFIG.redirectUri);
+    
+    try {
+        const response = await fetch('/api/tiktok-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, redirectUri })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('ttAccessToken', data.access_token);
+        localStorage.setItem('ttOpenId', data.open_id);
+        
+        // Redirect back to main dashboard
+        window.location.href = '/';
+        
+    } catch (error) {
+        alert('Failed to get access token: ' + error.message);
+        console.error(error);
+    }
 }
